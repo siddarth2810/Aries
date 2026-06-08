@@ -30,12 +30,14 @@ async function main() {
   }
 
   const args = process.argv.slice(2);
+  const offline = args[0] === "--offline";
+  const input = offline ? args[1] : args[0];
 
-  if (args.length !== 1) {
+  if ((offline && args.length !== 2) || (!offline && args.length !== 1) || !input) {
     throw new Error("Unsupported input");
   }
 
-  const { sourceLabel, diffText } = await resolveInput(args[0] ?? "");
+  const { sourceLabel, diffText } = await resolveInput(input, { offline });
   const diff = parseUnifiedDiff(diffText, sourceLabel);
   const { runAriesApp } = await import("./tui/runAriesApp.js");
   await runAriesApp(diff);

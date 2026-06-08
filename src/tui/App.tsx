@@ -19,7 +19,7 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
   const headerHeight = 1;
   const footerHeight = 1;
   const bodyHeight = Math.max(8, height - headerHeight - footerHeight);
-  const sidebarWidth = Math.min(42, Math.max(24, Math.floor(width * 0.3)));
+  const sidebarWidth = Math.min(42, Math.max(24, Math.floor(width * 0.2)));
   const diffWidth = Math.max(20, width - sidebarWidth);
   const visibleFileRows = Math.max(1, bodyHeight - 1);
   const clampedSelectedIndex = clampSelectedIndex(selectedIndex, diff.files.length);
@@ -32,12 +32,12 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
       return;
     }
 
-    if (key.name === "up") {
+    if (key.name === "up" || key.name == "k") {
       setSelectedIndex((index) => clampSelectedIndex(index - 1, diff.files.length));
       return;
     }
 
-    if (key.name === "down") {
+    if (key.name === "down" || key.name == "j") {
       setSelectedIndex((index) => clampSelectedIndex(index + 1, diff.files.length));
     }
   });
