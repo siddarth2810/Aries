@@ -23,7 +23,7 @@ async function main() {
     });
 
     if (child.error) {
-      throw new Error(`Aries requires Bun for OpenTUI runtime: ${child.error.message}`);
+      throw new Error(`Aries requires Bun to run the OpenTUI runtime. Install Bun from https://bun.sh/ and retry. (${child.error.message})`);
     }
 
     process.exit(child.status ?? 1);

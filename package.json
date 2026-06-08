@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "description": "Terminal-first viewer for local patch files and GitHub pull request diffs.",
   "type": "module",
+  "license": "MIT",
   "bin": {
     "aries": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "bun run build",
     "typecheck": "tsc --noEmit",
     "start": "bun run src/cli.ts"
   },

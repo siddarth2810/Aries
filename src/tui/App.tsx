@@ -56,6 +56,16 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
       return;
     }
 
+    if (key.name === "pageup") {
+      setDiffScrollOffset((offset) => clampScrollOffset(offset - scrollPageSize, diffRowCount, visibleDiffRows));
+      return;
+    }
+
+    if (key.name === "pagedown") {
+      setDiffScrollOffset((offset) => clampScrollOffset(offset + scrollPageSize, diffRowCount, visibleDiffRows));
+      return;
+    }
+
     if (key.name === "k") {
       setDiffScrollOffset((offset) => clampScrollOffset(offset - scrollPageSize, diffRowCount, visibleDiffRows));
       return;
