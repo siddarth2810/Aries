@@ -1,5 +1,5 @@
 {
-  "name": "aries",
+  "name": "aries-diff",
   "version": "0.1.0",
   "description": "Terminal-first viewer for local patch files and GitHub pull request diffs.",
   "type": "module",

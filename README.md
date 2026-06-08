@@ -5,13 +5,13 @@ Terminal-first viewer for local `.diff` / `.patch` files and GitHub pull request
 ## Install
 
 ```bash
-npm install -g aries
+npm install -g aries-diff
 ```
 
 You can also run it without a global install:
 
 ```bash
-npx aries fixtures/simple.diff
+npx aries-diff fixtures/simple.diff
 ```
 
 ## Usage

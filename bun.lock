@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "patchdeck",
+      "name": "aries-diff",
       "dependencies": {
         "@opentui/core": "^0.1.88",
         "@opentui/react": "^0.1.88",
