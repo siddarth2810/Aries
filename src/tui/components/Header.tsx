@@ -1,7 +1,14 @@
+import { memo } from "react";
 import type { ParsedDiff } from "../../parser/types.js";
 import { clampText, padText } from "../text.js";
 
-export function Header({ diff, width }: { diff: ParsedDiff; width: number }) {
+export const Header = memo(function Header({
+  diff,
+  width,
+}: {
+  diff: ParsedDiff;
+  width: number;
+}) {
   const text = `Aries | ${diff.sourceLabel} | ${diff.files.length} files | +${diff.totalAdditions} -${diff.totalDeletions}`;
 
   return (
@@ -9,4 +16,4 @@ export function Header({ diff, width }: { diff: ParsedDiff; width: number }) {
       <text fg="#f4f7fb">{padText(clampText(` ${text}`, width), width)}</text>
     </box>
   );
-}
+});
