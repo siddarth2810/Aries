@@ -2,18 +2,10 @@ import type { DiffFile } from "../../parser/types.js";
 import { buildSplitRows } from "../../render/buildSplitRows.js";
 import type { SplitDiffRow } from "../../render/types.js";
 import { clampText, padText } from "../text.js";
+import { tuiTheme } from "../theme.js";
 
-function typeColor(type: SplitDiffRow["oldType"] | SplitDiffRow["newType"]) {
-  switch (type) {
-    case "add":
-      return "#8ee39f";
-    case "remove":
-      return "#ff9999";
-    case "hunk":
-      return "#7cc7ff";
-    default:
-      return "#d7dee8";
-  }
+function typeColor(type: SplitDiffRow["oldType"] | SplitDiffRow["newType"] | undefined) {
+  return tuiTheme.diffLine[type ?? "context"];
 }
 
 function renderCell({
@@ -62,7 +54,7 @@ export function SplitDiffView({
         width,
         height: "100%",
         border: true,
-        borderColor: "#27405f",
+        borderColor: tuiTheme.chrome.border,
         flexDirection: "row",
         paddingLeft: 1,
         paddingRight: 1,
@@ -70,7 +62,7 @@ export function SplitDiffView({
     >
       {isAddedFile ? (
         <box style={{ width: singlePanelWidth, height: "100%", flexDirection: "column" }}>
-          <text fg="#d8e4f2">{padText("New", singlePanelWidth)}</text>
+          <text fg={tuiTheme.content.text}>{padText("New", singlePanelWidth)}</text>
           {rows.map((row, index) => (
             <text key={`new:${index}`} fg={typeColor(row.newType)}>
               {renderCell({
@@ -85,7 +77,7 @@ export function SplitDiffView({
       ) : (
         <>
           <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-            <text fg="#d8e4f2">{padText("Old", panelWidth)}</text>
+            <text fg={tuiTheme.content.text}>{padText("Old", panelWidth)}</text>
             {rows.map((row, index) => (
               <text key={`old:${index}`} fg={typeColor(row.oldType)}>
                 {renderCell({
@@ -97,9 +89,9 @@ export function SplitDiffView({
               </text>
             ))}
           </box>
-          <box style={{ width: 1, height: "100%", backgroundColor: "#27405f" }} />
+          <box style={{ width: 1, height: "100%", backgroundColor: tuiTheme.chrome.border }} />
           <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-            <text fg="#d8e4f2">{padText("New", panelWidth)}</text>
+            <text fg={tuiTheme.content.text}>{padText("New", panelWidth)}</text>
             {rows.map((row, index) => (
               <text key={`new:${index}`} fg={typeColor(row.newType)}>
                 {renderCell({

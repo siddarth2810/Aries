@@ -1,18 +1,12 @@
 import type { DiffFile, DiffFileStatus } from "../../parser/types.js";
 import { clampText, padText } from "../text.js";
+import { tuiTheme } from "../theme.js";
 
 const STATUS_MARKERS: Record<DiffFileStatus, string> = {
   added: "+",
   deleted: "-",
   modified: "~",
   renamed: "R",
-};
-
-const STATUS_COLORS: Record<DiffFileStatus, string> = {
-  added: "#84d892",
-  deleted: "#ff8a8a",
-  modified: "#ffd166",
-  renamed: "#7cc7ff",
 };
 
 function formatFileLine(file: DiffFile, width: number) {
@@ -44,21 +38,21 @@ export function FileList({
         width,
         height: "100%",
         border: true,
-        borderColor: "#27405f",
+        borderColor: tuiTheme.chrome.border,
         flexDirection: "column",
         paddingLeft: 1,
         paddingRight: 1,
       }}
     >
-      <text fg="#d8e4f2">{padText("Files", innerWidth)}</text>
+      <text fg={tuiTheme.content.text}>{padText("Files", innerWidth)}</text>
       {visibleFiles.map((file, index) => {
         const fileIndex = scrollOffset + index;
         const selected = fileIndex === selectedIndex;
         return (
           <text
             key={`${file.displayPath}:${fileIndex}`}
-            fg={selected ? "#06131f" : STATUS_COLORS[file.status]}
-            bg={selected ? "#b7d7ff" : undefined}
+            fg={selected ? tuiTheme.selection.foreground : tuiTheme.fileStatus[file.status]}
+            bg={selected ? tuiTheme.selection.background : undefined}
           >
             {padText(formatFileLine(file, innerWidth), innerWidth)}
           </text>

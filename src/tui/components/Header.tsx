@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { ParsedDiff } from "../../parser/types.js";
 import { clampText, padText } from "../text.js";
+import { tuiTheme } from "../theme.js";
 
 export const Header = memo(function Header({
   diff,
@@ -12,8 +13,8 @@ export const Header = memo(function Header({
   const text = `Aries | ${diff.sourceLabel} | ${diff.files.length} files | +${diff.totalAdditions} -${diff.totalDeletions}`;
 
   return (
-    <box style={{ width: "100%", height: 1, backgroundColor: "#102235" }}>
-      <text fg="#f4f7fb">{padText(clampText(` ${text}`, width), width)}</text>
+    <box style={{ width: "100%", height: 1, backgroundColor: tuiTheme.chrome.background }}>
+      <text fg={tuiTheme.content.strongerText}>{padText(clampText(` ${text}`, width), width)}</text>
     </box>
   );
 });

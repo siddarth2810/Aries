@@ -7,6 +7,7 @@ import { FileList } from "./components/FileList.js";
 import { Header } from "./components/Header.js";
 import { SplitDiffView } from "./components/SplitDiffView.js";
 import { StatusBar } from "./components/StatusBar.js";
+import { tuiTheme } from "./theme.js";
 
 function clampSelectedIndex(index: number, fileCount: number) {
   return Math.min(Math.max(index, 0), Math.max(0, fileCount - 1));
@@ -71,7 +72,7 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
         width: "100%",
         height: "100%",
         flexDirection: "column",
-        backgroundColor: "#07111e",
+        backgroundColor: tuiTheme.content.background,
       }}
     >
       <Header diff={diff} width={width} />
