@@ -42,14 +42,19 @@ function renderCell({
 export function SplitDiffView({
   file,
   maxRows,
+  scrollOffset,
   width,
 }: {
   file: DiffFile | undefined;
   maxRows: number;
+  scrollOffset: number;
   width: number;
 }) {
+  const isAddedFile = file?.status === "added";
   const panelWidth = Math.max(10, Math.floor((width - 5) / 2));
-  const rows = file ? buildSplitRows(file).slice(0, Math.max(0, maxRows - 1)) : [];
+  const singlePanelWidth = Math.max(10, width - 4);
+  const visibleRows = Math.max(0, maxRows - 1);
+  const rows = file ? buildSplitRows(file).slice(scrollOffset, scrollOffset + visibleRows) : [];
 
   return (
     <box
@@ -63,33 +68,51 @@ export function SplitDiffView({
         paddingRight: 1,
       }}
     >
-      <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-        <text fg="#d8e4f2">{padText("Old", panelWidth)}</text>
-        {rows.map((row, index) => (
-          <text key={`old:${index}`} fg={typeColor(row.oldType)}>
-            {renderCell({
-              content: row.oldContent,
-              lineNumber: row.oldLineNumber,
-              type: row.oldType,
-              width: panelWidth,
-            })}
-          </text>
-        ))}
-      </box>
-      <box style={{ width: 1, height: "100%", backgroundColor: "#27405f" }} />
-      <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-        <text fg="#d8e4f2">{padText("New", panelWidth)}</text>
-        {rows.map((row, index) => (
-          <text key={`new:${index}`} fg={typeColor(row.newType)}>
-            {renderCell({
-              content: row.newContent,
-              lineNumber: row.newLineNumber,
-              type: row.newType,
-              width: panelWidth,
-            })}
-          </text>
-        ))}
-      </box>
+      {isAddedFile ? (
+        <box style={{ width: singlePanelWidth, height: "100%", flexDirection: "column" }}>
+          <text fg="#d8e4f2">{padText("New", singlePanelWidth)}</text>
+          {rows.map((row, index) => (
+            <text key={`new:${index}`} fg={typeColor(row.newType)}>
+              {renderCell({
+                content: row.newContent,
+                lineNumber: row.newLineNumber,
+                type: row.newType,
+                width: singlePanelWidth,
+              })}
+            </text>
+          ))}
+        </box>
+      ) : (
+        <>
+          <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
+            <text fg="#d8e4f2">{padText("Old", panelWidth)}</text>
+            {rows.map((row, index) => (
+              <text key={`old:${index}`} fg={typeColor(row.oldType)}>
+                {renderCell({
+                  content: row.oldContent,
+                  lineNumber: row.oldLineNumber,
+                  type: row.oldType,
+                  width: panelWidth,
+                })}
+              </text>
+            ))}
+          </box>
+          <box style={{ width: 1, height: "100%", backgroundColor: "#27405f" }} />
+          <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
+            <text fg="#d8e4f2">{padText("New", panelWidth)}</text>
+            {rows.map((row, index) => (
+              <text key={`new:${index}`} fg={typeColor(row.newType)}>
+                {renderCell({
+                  content: row.newContent,
+                  lineNumber: row.newLineNumber,
+                  type: row.newType,
+                  width: panelWidth,
+                })}
+              </text>
+            ))}
+          </box>
+        </>
+      )}
     </box>
   );
 }
