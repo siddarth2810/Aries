@@ -25,15 +25,17 @@ function formatFileLine(file: DiffFile, width: number) {
 export function FileList({
   files,
   maxRows,
+  scrollOffset,
   selectedIndex,
   width,
 }: {
   files: DiffFile[];
   maxRows: number;
+  scrollOffset: number;
   selectedIndex: number;
   width: number;
 }) {
-  const visibleFiles = files.slice(0, Math.max(0, maxRows - 1));
+  const visibleFiles = files.slice(scrollOffset, scrollOffset + Math.max(0, maxRows - 1));
   const innerWidth = Math.max(1, width - 4);
 
   return (
@@ -50,10 +52,11 @@ export function FileList({
     >
       <text fg="#d8e4f2">{padText("Files", innerWidth)}</text>
       {visibleFiles.map((file, index) => {
-        const selected = index === selectedIndex;
+        const fileIndex = scrollOffset + index;
+        const selected = fileIndex === selectedIndex;
         return (
           <text
-            key={`${file.displayPath}:${index}`}
+            key={`${file.displayPath}:${fileIndex}`}
             fg={selected ? "#06131f" : STATUS_COLORS[file.status]}
             bg={selected ? "#b7d7ff" : undefined}
           >

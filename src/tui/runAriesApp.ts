@@ -4,7 +4,7 @@ import { createElement } from "react";
 import type { ParsedDiff } from "../parser/types.js";
 import { App } from "./App.js";
 
-export async function runPatchDeckApp(diff: ParsedDiff) {
+export async function runAriesApp(diff: ParsedDiff) {
   const renderer = await createCliRenderer({
     stdin: process.stdin,
     stdout: process.stdout,

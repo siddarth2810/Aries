@@ -1,8 +1,8 @@
 import { fetchDiff } from "./fetchDiff.js";
 import { readLocalDiff } from "./readLocalDiff.js";
 
-export const PATCHDECK_USAGE = `Usage:
-  patchdeck <file.diff | file.patch | github-pr-url | github-pr-diff-url>`;
+export const ARIES_USAGE = `Usage:
+  aries <file.diff | file.patch | github-pr-url | github-pr-diff-url>`;
 
 function isHttpUrl(input: string) {
   return /^https?:\/\//.test(input);

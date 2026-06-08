@@ -2,17 +2,17 @@
 
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { PATCHDECK_USAGE, resolveInput } from "./input/resolveInput.js";
+import { ARIES_USAGE, resolveInput } from "./input/resolveInput.js";
 import { parseUnifiedDiff } from "./parser/parseUnifiedDiff.js";
 
-function formatPatchDeckError(error: unknown) {
+function formatAriesError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
 
   if (message === "Unsupported input") {
-    return `Unsupported input.\n\n${PATCHDECK_USAGE}\n`;
+    return `Unsupported input.\n\n${ARIES_USAGE}\n`;
   }
 
-  return `patchdeck: ${message}\n\n${PATCHDECK_USAGE}\n`;
+  return `aries: ${message}\n\n${ARIES_USAGE}\n`;
 }
 
 async function main() {
@@ -23,7 +23,7 @@ async function main() {
     });
 
     if (child.error) {
-      throw new Error(`PatchDeck requires Bun for OpenTUI runtime: ${child.error.message}`);
+      throw new Error(`Aries requires Bun for OpenTUI runtime: ${child.error.message}`);
     }
 
     process.exit(child.status ?? 1);
@@ -37,11 +37,11 @@ async function main() {
 
   const { sourceLabel, diffText } = await resolveInput(args[0] ?? "");
   const diff = parseUnifiedDiff(diffText, sourceLabel);
-  const { runPatchDeckApp } = await import("./tui/runPatchDeckApp.js");
-  await runPatchDeckApp(diff);
+  const { runAriesApp } = await import("./tui/runAriesApp.js");
+  await runAriesApp(diff);
 }
 
 await main().catch((error) => {
-  process.stderr.write(formatPatchDeckError(error));
+  process.stderr.write(formatAriesError(error));
   process.exit(1);
 });

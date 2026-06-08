@@ -1,10 +1,10 @@
 {
-  "name": "patchdeck",
+  "name": "aries",
   "version": "0.1.0",
   "description": "Terminal-first viewer for local patch files and GitHub pull request diffs.",
   "type": "module",
   "bin": {
-    "patchdeck": "./dist/cli.js"
+    "aries": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
