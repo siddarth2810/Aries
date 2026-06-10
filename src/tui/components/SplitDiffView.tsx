@@ -1,5 +1,5 @@
+import { memo } from "react";
 import type { DiffFile } from "../../parser/types.js";
-import { buildSplitRows } from "../../render/buildSplitRows.js";
 import type { SplitDiffRow } from "../../render/types.js";
 import { clampText, padText } from "../text.js";
 import { tuiTheme } from "../theme.js";
@@ -12,24 +12,46 @@ const gutterWidth = 5;
 const gutterGap = 2;
 const splitGap = 3;
 
+type PaneMetrics = {
+  leftPadding: number;
+  gutter: number;
+  gap: number;
+  codeWidth: number;
+  rightPadding: number;
+};
+
+const paneMetricsCache = new Map<number, PaneMetrics>();
+
 function typeColor(type: SplitDiffRow["oldType"] | SplitDiffRow["newType"] | undefined) {
   return tuiTheme.diffLine[type ?? "context"];
 }
 
-function paneMetrics(width: number) {
+function paneMetrics(width: number): PaneMetrics {
+  const cached = paneMetricsCache.get(width);
+
+  if (cached) {
+    return cached;
+  }
+
   const leftPadding = Math.min(panePaddingLeft, Math.max(0, width));
   const gutter = Math.min(gutterWidth, Math.max(0, width - leftPadding));
   const gap = Math.min(gutterGap, Math.max(0, width - leftPadding - gutter));
   const rightPadding = Math.min(panePaddingRight, Math.max(0, width - leftPadding - gutter - gap));
   const codeWidth = Math.max(0, width - leftPadding - gutter - gap - rightPadding);
 
-  return {
+  // Every visible row asks for the same pane widths for a given terminal size.
+  // Cache the derived gutter/code widths by pane width to avoid allocating a
+  // fresh metrics object for each cell during scroll-heavy renders.
+  const metrics = {
     leftPadding,
     gutter,
     gap,
     codeWidth,
     rightPadding,
   };
+
+  paneMetricsCache.set(width, metrics);
+  return metrics;
 }
 
 function PaneHeader({ title, width }: { title: string; width: number }) {
@@ -162,22 +184,21 @@ function ScrollableDiffRows({
   );
 }
 
-export function SplitDiffView({
+// App re-renders for file-list cursor movement and focus changes. Memoizing
+// the diff pane keeps those interactions from repainting row JSX when the
+// active file, viewport rows, and width have not changed.
+export const SplitDiffView = memo(function SplitDiffView({
   file,
-  maxRows,
-  scrollOffset,
+  rows,
   width,
 }: {
   file: DiffFile | undefined;
-  maxRows: number;
-  scrollOffset: number;
+  rows: SplitDiffRow[];
   width: number;
 }) {
   const isSinglePane = file?.status === "added";
   const oldPaneWidth = isSinglePane ? 0 : Math.max(0, Math.floor((width - splitGap) / 2));
   const newPaneWidth = isSinglePane ? width : Math.max(0, width - splitGap - oldPaneWidth);
-  const visibleRows = Math.max(0, maxRows - SPLIT_DIFF_HEADER_HEIGHT);
-  const rows = file ? buildSplitRows(file).slice(scrollOffset, scrollOffset + visibleRows) : [];
 
   return (
     <box
@@ -203,4 +224,4 @@ export function SplitDiffView({
       />
     </box>
   );
-}
+});

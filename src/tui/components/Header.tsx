@@ -24,7 +24,7 @@ export const Header = memo(function Header({
 }) {
   const sourceLabel = formatSourceLabel(diff.sourceLabel);
   const sidebarHint = sidebarVisible ? "" : "  b files";
-  const text = `Aries  ${sourceLabel}  ${diff.files.length} files  +${diff.totalAdditions} -${diff.totalDeletions}${sidebarHint}`;
+  const text = `Aries  ${sourceLabel}  +${diff.totalAdditions} -${diff.totalDeletions}${sidebarHint}`;
 
   return (
     <box style={{ width: "100%", height: 1, backgroundColor: tuiTheme.chrome.headerBackground }}>

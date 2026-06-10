@@ -39,10 +39,23 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
   const clampedCursorFileIndex = clampSelectedIndex(cursorFileIndex, diff.files.length);
   const fileListOffset = Math.max(0, clampedCursorFileIndex - visibleFileRows + 1);
   const selectedFile = diff.files[clampedActiveFileIndex];
-  const diffRowCount = useMemo(() => (selectedFile ? buildSplitRows(selectedFile).length : 0), [selectedFile]);
+
+  // Scrolling, focus changes, and sidebar cursor movement all re-render App.
+  // Build the hunk-aligned split rows once per active file so those cheap UI
+  // updates do not redo the full diff-to-row transformation.
+  const selectedFileRows = useMemo(() => (selectedFile ? buildSplitRows(selectedFile) : []), [selectedFile]);
+  const diffRowCount = selectedFileRows.length;
   const visibleDiffRows = Math.max(0, bodyHeight - SPLIT_DIFF_HEADER_HEIGHT);
   const clampedDiffScrollOffset = clampScrollOffset(diffScrollOffset, diffRowCount, visibleDiffRows);
   const scrollPageSize = Math.max(1, visibleDiffRows);
+
+  // OpenTUI still receives every JSX node we create, so keep SplitDiffView's
+  // input to the viewport rows instead of asking it to slice or map the full
+  // file on each render.
+  const visibleSplitRows = useMemo(
+    () => selectedFileRows.slice(clampedDiffScrollOffset, clampedDiffScrollOffset + visibleDiffRows),
+    [clampedDiffScrollOffset, selectedFileRows, visibleDiffRows],
+  );
 
   useKeyboard((key: KeyEvent) => {
     if (key.name === "q" || key.name === "escape") {
@@ -136,8 +149,7 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
         ) : null}
         <SplitDiffView
           file={selectedFile}
-          maxRows={bodyHeight}
-          scrollOffset={clampedDiffScrollOffset}
+          rows={visibleSplitRows}
           width={diffWidth}
         />
       </box>
