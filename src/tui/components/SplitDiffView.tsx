@@ -54,6 +54,31 @@ function paneMetrics(width: number): PaneMetrics {
   return metrics;
 }
 
+function splitPaneWidths(width: number, isSinglePane: boolean) {
+  const oldPaneWidth = isSinglePane ? 0 : Math.max(0, Math.floor((width - splitGap) / 2));
+  const newPaneWidth = isSinglePane ? width : Math.max(0, width - splitGap - oldPaneWidth);
+
+  return {
+    oldPaneWidth,
+    newPaneWidth,
+  };
+}
+
+export function getSplitDiffCodeWidth(width: number, isSinglePane: boolean) {
+  const { oldPaneWidth, newPaneWidth } = splitPaneWidths(width, isSinglePane);
+
+  if (isSinglePane) {
+    return paneMetrics(newPaneWidth).codeWidth;
+  }
+
+  return Math.min(paneMetrics(oldPaneWidth).codeWidth, paneMetrics(newPaneWidth).codeWidth);
+}
+
+export function renderCodeCell(content: string, scrollX: number, width: number) {
+  const safeScrollX = Math.max(0, Math.floor(scrollX));
+  return clampText(content.replace(/\p{C}/gu, "").slice(safeScrollX), width);
+}
+
 function PaneHeader({ title, width }: { title: string; width: number }) {
   const metrics = paneMetrics(width);
 
@@ -75,11 +100,13 @@ function DiffDivider() {
 function PaneCell({
   content,
   lineNumber,
+  scrollX,
   type,
   width,
 }: {
   content?: string;
   lineNumber?: number;
+  scrollX: number;
   type?: SplitDiffRow["oldType"] | SplitDiffRow["newType"];
   width: number;
 }) {
@@ -101,7 +128,7 @@ function PaneCell({
       <text>{padText("", metrics.leftPadding)}</text>
       <text fg={tuiTheme.lineNumber}>{padText(lineText, metrics.gutter)}</text>
       <text>{padText("", metrics.gap)}</text>
-      <text fg={typeColor(type)}>{padText(clampText(code, metrics.codeWidth), metrics.codeWidth)}</text>
+      <text fg={typeColor(type)}>{padText(renderCodeCell(code, scrollX, metrics.codeWidth), metrics.codeWidth)}</text>
       <text>{padText("", metrics.rightPadding)}</text>
     </box>
   );
@@ -143,12 +170,14 @@ function ScrollableDiffRows({
   oldPaneWidth,
   newPaneWidth,
   rows,
+  scrollX,
   width,
 }: {
   isSinglePane: boolean;
   oldPaneWidth: number;
   newPaneWidth: number;
   rows: SplitDiffRow[];
+  scrollX: number;
   width: number;
 }) {
   return (
@@ -159,6 +188,7 @@ function ScrollableDiffRows({
             key={`new:${index}`}
             content={row.newContent}
             lineNumber={row.newLineNumber}
+            scrollX={scrollX}
             type={row.newType}
             width={newPaneWidth}
           />
@@ -167,6 +197,7 @@ function ScrollableDiffRows({
             <PaneCell
               content={row.oldContent}
               lineNumber={row.oldLineNumber}
+              scrollX={scrollX}
               type={row.oldType}
               width={oldPaneWidth}
             />
@@ -174,6 +205,7 @@ function ScrollableDiffRows({
             <PaneCell
               content={row.newContent}
               lineNumber={row.newLineNumber}
+              scrollX={scrollX}
               type={row.newType}
               width={newPaneWidth}
             />
@@ -190,15 +222,16 @@ function ScrollableDiffRows({
 export const SplitDiffView = memo(function SplitDiffView({
   file,
   rows,
+  scrollX,
   width,
 }: {
   file: DiffFile | undefined;
   rows: SplitDiffRow[];
+  scrollX: number;
   width: number;
 }) {
   const isSinglePane = file?.status === "added";
-  const oldPaneWidth = isSinglePane ? 0 : Math.max(0, Math.floor((width - splitGap) / 2));
-  const newPaneWidth = isSinglePane ? width : Math.max(0, width - splitGap - oldPaneWidth);
+  const { oldPaneWidth, newPaneWidth } = splitPaneWidths(width, isSinglePane);
 
   return (
     <box
@@ -220,6 +253,7 @@ export const SplitDiffView = memo(function SplitDiffView({
         oldPaneWidth={oldPaneWidth}
         newPaneWidth={newPaneWidth}
         rows={rows}
+        scrollX={scrollX}
         width={width}
       />
     </box>

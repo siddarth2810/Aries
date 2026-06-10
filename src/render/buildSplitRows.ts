@@ -1,6 +1,25 @@
 import type { DiffFile, DiffLine } from "../parser/types.js";
 import type { SplitDiffRow } from "./types.js";
 
+export type SplitDiffViewIndex = {
+  rows: SplitDiffRow[];
+  maxContentWidth: number;
+};
+
+function contentWidth(content: string | undefined) {
+  return content?.replace(/\p{C}/gu, "").length ?? 0;
+}
+
+function maxRowContentWidth(rows: SplitDiffRow[]) {
+  let maxContentWidth = 0;
+
+  for (const row of rows) {
+    maxContentWidth = Math.max(maxContentWidth, contentWidth(row.oldContent), contentWidth(row.newContent));
+  }
+
+  return maxContentWidth;
+}
+
 function flushChangeBlock(rows: SplitDiffRow[], removed: DiffLine[], added: DiffLine[]) {
   const rowCount = Math.max(removed.length, added.length);
 
@@ -69,4 +88,13 @@ export function buildSplitRows(file: DiffFile): SplitDiffRow[] {
   }
 
   return rows;
+}
+
+export function buildSplitDiffViewIndex(file: DiffFile): SplitDiffViewIndex {
+  const rows = buildSplitRows(file);
+
+  return {
+    rows,
+    maxContentWidth: maxRowContentWidth(rows),
+  };
 }

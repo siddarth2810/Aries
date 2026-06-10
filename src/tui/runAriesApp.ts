@@ -9,6 +9,7 @@ export async function runAriesApp(diff: ParsedDiff) {
     stdin: process.stdin,
     stdout: process.stdout,
     useMouse: true,
+    enableMouseMovement: true,
     screenMode: "alternate-screen",
     exitOnCtrlC: true,
     openConsoleOnError: true,
