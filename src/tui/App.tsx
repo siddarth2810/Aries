@@ -5,7 +5,7 @@ import type { ParsedDiff } from "../parser/types.js";
 import { buildSplitRows } from "../render/buildSplitRows.js";
 import { FileList } from "./components/FileList.js";
 import { Header } from "./components/Header.js";
-import { SplitDiffView } from "./components/SplitDiffView.js";
+import { SPLIT_DIFF_HEADER_HEIGHT, SplitDiffView } from "./components/SplitDiffView.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { tuiTheme } from "./theme.js";
 
@@ -40,7 +40,7 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
   const fileListOffset = Math.max(0, clampedCursorFileIndex - visibleFileRows + 1);
   const selectedFile = diff.files[clampedActiveFileIndex];
   const diffRowCount = useMemo(() => (selectedFile ? buildSplitRows(selectedFile).length : 0), [selectedFile]);
-  const visibleDiffRows = Math.max(0, bodyHeight - 1);
+  const visibleDiffRows = Math.max(0, bodyHeight - SPLIT_DIFF_HEADER_HEIGHT);
   const clampedDiffScrollOffset = clampScrollOffset(diffScrollOffset, diffRowCount, visibleDiffRows);
   const scrollPageSize = Math.max(1, visibleDiffRows);
 

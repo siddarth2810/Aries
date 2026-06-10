@@ -4,11 +4,53 @@ import type { SplitDiffRow } from "../../render/types.js";
 import { clampText, padText } from "../text.js";
 import { tuiTheme } from "../theme.js";
 
+export const SPLIT_DIFF_HEADER_HEIGHT = 2;
+
+const panePaddingLeft = 2;
+const panePaddingRight = 2;
+const gutterWidth = 5;
+const gutterGap = 2;
+const splitGap = 3;
+
 function typeColor(type: SplitDiffRow["oldType"] | SplitDiffRow["newType"] | undefined) {
   return tuiTheme.diffLine[type ?? "context"];
 }
 
-function renderCell({
+function paneMetrics(width: number) {
+  const leftPadding = Math.min(panePaddingLeft, Math.max(0, width));
+  const gutter = Math.min(gutterWidth, Math.max(0, width - leftPadding));
+  const gap = Math.min(gutterGap, Math.max(0, width - leftPadding - gutter));
+  const rightPadding = Math.min(panePaddingRight, Math.max(0, width - leftPadding - gutter - gap));
+  const codeWidth = Math.max(0, width - leftPadding - gutter - gap - rightPadding);
+
+  return {
+    leftPadding,
+    gutter,
+    gap,
+    codeWidth,
+    rightPadding,
+  };
+}
+
+function PaneHeader({ title, width }: { title: string; width: number }) {
+  const metrics = paneMetrics(width);
+
+  return (
+    <box style={{ width, height: 1, flexDirection: "row" }}>
+      <text>{padText("", metrics.leftPadding)}</text>
+      <text>{padText("", metrics.gutter)}</text>
+      <text>{padText("", metrics.gap)}</text>
+      <text fg={tuiTheme.content.subtleText}>{padText(title, metrics.codeWidth)}</text>
+      <text>{padText("", metrics.rightPadding)}</text>
+    </box>
+  );
+}
+
+function DiffDivider() {
+  return <text fg={tuiTheme.chrome.divider}>{padText(" │ ", splitGap)}</text>;
+}
+
+function PaneCell({
   content,
   lineNumber,
   type,
@@ -19,16 +61,105 @@ function renderCell({
   type?: SplitDiffRow["oldType"] | SplitDiffRow["newType"];
   width: number;
 }) {
+  const metrics = paneMetrics(width);
+
   if (type === "empty") {
-    return padText("", width);
+    return (
+      <box style={{ width, height: 1, flexDirection: "row" }}>
+        <text>{padText("", width)}</text>
+      </box>
+    );
   }
 
-  if (type === "hunk") {
-    return padText(clampText(content ?? "", width), width);
-  }
+  const code = content ?? "";
+  const lineText = type === "hunk" || lineNumber === undefined ? "" : String(lineNumber).padStart(metrics.gutter);
 
-  const linePrefix = lineNumber === undefined ? "     " : `${String(lineNumber).padStart(4)} `;
-  return padText(clampText(`${linePrefix}${content ?? ""}`, width), width);
+  return (
+    <box style={{ width, height: 1, flexDirection: "row" }}>
+      <text>{padText("", metrics.leftPadding)}</text>
+      <text fg={tuiTheme.lineNumber}>{padText(lineText, metrics.gutter)}</text>
+      <text>{padText("", metrics.gap)}</text>
+      <text fg={typeColor(type)}>{padText(clampText(code, metrics.codeWidth), metrics.codeWidth)}</text>
+      <text>{padText("", metrics.rightPadding)}</text>
+    </box>
+  );
+}
+
+function DiffSplitHeader({
+  file,
+  isSinglePane,
+  oldPaneWidth,
+  newPaneWidth,
+  width,
+}: {
+  file: DiffFile | undefined;
+  isSinglePane: boolean;
+  oldPaneWidth: number;
+  newPaneWidth: number;
+  width: number;
+}) {
+  const fileLabel = file?.displayPath ?? "";
+
+  return (
+    <box style={{ width, height: SPLIT_DIFF_HEADER_HEIGHT, flexDirection: "column" }}>
+      <text fg={tuiTheme.content.text}>{padText(` ${clampText(fileLabel, Math.max(0, width - 1))}`, width)}</text>
+      {isSinglePane ? (
+        <PaneHeader title="new" width={newPaneWidth} />
+      ) : (
+        <box style={{ width, height: 1, flexDirection: "row" }}>
+          <PaneHeader title="old" width={oldPaneWidth} />
+          <DiffDivider />
+          <PaneHeader title="new" width={newPaneWidth} />
+        </box>
+      )}
+    </box>
+  );
+}
+
+function ScrollableDiffRows({
+  isSinglePane,
+  oldPaneWidth,
+  newPaneWidth,
+  rows,
+  width,
+}: {
+  isSinglePane: boolean;
+  oldPaneWidth: number;
+  newPaneWidth: number;
+  rows: SplitDiffRow[];
+  width: number;
+}) {
+  return (
+    <box style={{ width, height: "100%", flexDirection: "column" }}>
+      {rows.map((row, index) =>
+        isSinglePane ? (
+          <PaneCell
+            key={`new:${index}`}
+            content={row.newContent}
+            lineNumber={row.newLineNumber}
+            type={row.newType}
+            width={newPaneWidth}
+          />
+        ) : (
+          <box key={`split:${index}`} style={{ width, height: 1, flexDirection: "row" }}>
+            <PaneCell
+              content={row.oldContent}
+              lineNumber={row.oldLineNumber}
+              type={row.oldType}
+              width={oldPaneWidth}
+            />
+            <DiffDivider />
+            <PaneCell
+              content={row.newContent}
+              lineNumber={row.newLineNumber}
+              type={row.newType}
+              width={newPaneWidth}
+            />
+          </box>
+        ),
+      )}
+    </box>
+  );
 }
 
 export function SplitDiffView({
@@ -42,10 +173,10 @@ export function SplitDiffView({
   scrollOffset: number;
   width: number;
 }) {
-  const isAddedFile = file?.status === "added";
-  const panelWidth = Math.max(10, Math.floor((width - 5) / 2));
-  const singlePanelWidth = Math.max(10, width - 4);
-  const visibleRows = Math.max(0, maxRows - 1);
+  const isSinglePane = file?.status === "added";
+  const oldPaneWidth = isSinglePane ? 0 : Math.max(0, Math.floor((width - splitGap) / 2));
+  const newPaneWidth = isSinglePane ? width : Math.max(0, width - splitGap - oldPaneWidth);
+  const visibleRows = Math.max(0, maxRows - SPLIT_DIFF_HEADER_HEIGHT);
   const rows = file ? buildSplitRows(file).slice(scrollOffset, scrollOffset + visibleRows) : [];
 
   return (
@@ -53,58 +184,23 @@ export function SplitDiffView({
       style={{
         width,
         height: "100%",
-        border: true,
-        borderColor: tuiTheme.chrome.border,
-        flexDirection: "row",
-        paddingLeft: 1,
-        paddingRight: 1,
+        flexDirection: "column",
       }}
     >
-      {isAddedFile ? (
-        <box style={{ width: singlePanelWidth, height: "100%", flexDirection: "column" }}>
-          <text fg={tuiTheme.content.text}>{padText("New", singlePanelWidth)}</text>
-          {rows.map((row, index) => (
-            <text key={`new:${index}`} fg={typeColor(row.newType)}>
-              {renderCell({
-                content: row.newContent,
-                lineNumber: row.newLineNumber,
-                type: row.newType,
-                width: singlePanelWidth,
-              })}
-            </text>
-          ))}
-        </box>
-      ) : (
-        <>
-          <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-            <text fg={tuiTheme.content.text}>{padText("Old", panelWidth)}</text>
-            {rows.map((row, index) => (
-              <text key={`old:${index}`} fg={typeColor(row.oldType)}>
-                {renderCell({
-                  content: row.oldContent,
-                  lineNumber: row.oldLineNumber,
-                  type: row.oldType,
-                  width: panelWidth,
-                })}
-              </text>
-            ))}
-          </box>
-          <box style={{ width: 1, height: "100%", backgroundColor: tuiTheme.chrome.border }} />
-          <box style={{ width: panelWidth, height: "100%", flexDirection: "column" }}>
-            <text fg={tuiTheme.content.text}>{padText("New", panelWidth)}</text>
-            {rows.map((row, index) => (
-              <text key={`new:${index}`} fg={typeColor(row.newType)}>
-                {renderCell({
-                  content: row.newContent,
-                  lineNumber: row.newLineNumber,
-                  type: row.newType,
-                  width: panelWidth,
-                })}
-              </text>
-            ))}
-          </box>
-        </>
-      )}
+      <DiffSplitHeader
+        file={file}
+        isSinglePane={isSinglePane}
+        oldPaneWidth={oldPaneWidth}
+        newPaneWidth={newPaneWidth}
+        width={width}
+      />
+      <ScrollableDiffRows
+        isSinglePane={isSinglePane}
+        oldPaneWidth={oldPaneWidth}
+        newPaneWidth={newPaneWidth}
+        rows={rows}
+        width={width}
+      />
     </box>
   );
 }
