@@ -8,7 +8,7 @@ export async function runAriesApp(diff: ParsedDiff) {
   const renderer = await createCliRenderer({
     stdin: process.stdin,
     stdout: process.stdout,
-    useMouse: false,
+    useMouse: true,
     screenMode: "alternate-screen",
     exitOnCtrlC: true,
     openConsoleOnError: true,

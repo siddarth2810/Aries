@@ -9,6 +9,8 @@ import { SplitDiffView } from "./components/SplitDiffView.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { tuiTheme } from "./theme.js";
 
+type FocusPane = "files" | "diff";
+
 function clampSelectedIndex(index: number, fileCount: number) {
   return Math.min(Math.max(index, 0), Math.max(0, fileCount - 1));
 }
@@ -19,20 +21,24 @@ function clampScrollOffset(offset: number, rowCount: number, visibleRows: number
 }
 
 export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [cursorFileIndex, setCursorFileIndex] = useState(0);
   const [diffScrollOffset, setDiffScrollOffset] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [focusPane, setFocusPane] = useState<FocusPane>("files");
   const terminal = useTerminalDimensions();
   const width = Math.max(40, terminal.width);
   const height = Math.max(12, terminal.height);
   const headerHeight = 1;
   const footerHeight = 1;
   const bodyHeight = Math.max(8, height - headerHeight - footerHeight);
-  const sidebarWidth = Math.min(42, Math.max(24, Math.floor(width * 0.2)));
-  const diffWidth = Math.max(20, width - sidebarWidth);
+  const sidebarWidth = sidebarVisible ? Math.min(32, Math.max(24, Math.floor(width * 0.28)), Math.max(0, width - 20)) : 0;
+  const diffWidth = width - sidebarWidth;
   const visibleFileRows = Math.max(1, bodyHeight - 1);
-  const clampedSelectedIndex = clampSelectedIndex(selectedIndex, diff.files.length);
-  const fileListOffset = Math.max(0, clampedSelectedIndex - visibleFileRows + 1);
-  const selectedFile = diff.files[clampedSelectedIndex];
+  const clampedActiveFileIndex = clampSelectedIndex(activeFileIndex, diff.files.length);
+  const clampedCursorFileIndex = clampSelectedIndex(cursorFileIndex, diff.files.length);
+  const fileListOffset = Math.max(0, clampedCursorFileIndex - visibleFileRows + 1);
+  const selectedFile = diff.files[clampedActiveFileIndex];
   const diffRowCount = useMemo(() => (selectedFile ? buildSplitRows(selectedFile).length : 0), [selectedFile]);
   const visibleDiffRows = Math.max(0, bodyHeight - 1);
   const clampedDiffScrollOffset = clampScrollOffset(diffScrollOffset, diffRowCount, visibleDiffRows);
@@ -44,15 +50,47 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
       return;
     }
 
-    if (key.name === "up") {
-      setSelectedIndex((index) => clampSelectedIndex(index - 1, diff.files.length));
-      setDiffScrollOffset(0);
+    if (key.name === "b") {
+      setSidebarVisible((visible) => {
+        setFocusPane(visible ? "diff" : "files");
+        return !visible;
+      });
       return;
     }
 
-    if (key.name === "down") {
-      setSelectedIndex((index) => clampSelectedIndex(index + 1, diff.files.length));
+    if (key.name === "f") {
+      setSidebarVisible(true);
+      setFocusPane("files");
+      setCursorFileIndex(clampedActiveFileIndex);
+      return;
+    }
+
+    if (key.name === "tab") {
+      setFocusPane((pane) => {
+        if (!sidebarVisible) {
+          return "diff";
+        }
+        return pane === "files" ? "diff" : "files";
+      });
+      return;
+    }
+
+    if (key.name === "return" && focusPane === "files" && sidebarVisible) {
+      setActiveFileIndex(clampedCursorFileIndex);
       setDiffScrollOffset(0);
+      setFocusPane("diff");
+      return;
+    }
+
+    if (key.name === "up" && sidebarVisible) {
+      setFocusPane("files");
+      setCursorFileIndex((index) => clampSelectedIndex(index - 1, diff.files.length));
+      return;
+    }
+
+    if (key.name === "down" && sidebarVisible) {
+      setFocusPane("files");
+      setCursorFileIndex((index) => clampSelectedIndex(index + 1, diff.files.length));
       return;
     }
 
@@ -85,15 +123,17 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
         backgroundColor: tuiTheme.content.background,
       }}
     >
-      <Header diff={diff} width={width} />
+      <Header diff={diff} selectedFile={selectedFile} sidebarVisible={sidebarVisible} width={width} />
       <box style={{ width: "100%", height: bodyHeight, flexDirection: "row" }}>
-        <FileList
-          files={diff.files}
-          maxRows={bodyHeight}
-          scrollOffset={fileListOffset}
-          selectedIndex={clampedSelectedIndex}
-          width={sidebarWidth}
-        />
+        {sidebarVisible ? (
+          <FileList
+            files={diff.files}
+            maxRows={bodyHeight}
+            scrollOffset={fileListOffset}
+            selectedIndex={clampedCursorFileIndex}
+            width={sidebarWidth}
+          />
+        ) : null}
         <SplitDiffView
           file={selectedFile}
           maxRows={bodyHeight}
