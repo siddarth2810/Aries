@@ -7,12 +7,16 @@ type DiffLineColors = Record<NonNullable<SplitDiffRow["oldType"] | SplitDiffRow[
 export type TuiTheme = {
   chrome: {
     background: string;
+    headerBackground: string;
+    footerBackground: string;
     border: string;
+    divider: string;
   };
   content: {
     background: string;
     text: string;
     mutedText: string;
+    subtleText: string;
     strongerText: string;
   };
   selection: {
@@ -21,34 +25,40 @@ export type TuiTheme = {
   };
   fileStatus: FileStatusColors;
   diffLine: DiffLineColors;
+  lineNumber: string;
 };
 
 export const tuiTheme: TuiTheme = {
   chrome: {
-    background: "#102235",
-    border: "#27405f",
+    background: "#07111e",
+    headerBackground: "#091523",
+    footerBackground: "#07111e",
+    border: "#1b2a3c",
+    divider: "#1d3046",
   },
   content: {
     background: "#07111e",
-    text: "#d8e4f2",
-    mutedText: "#c7d4e3",
-    strongerText: "#f4f7fb",
+    text: "#d7dee8",
+    mutedText: "#8fa1b5",
+    subtleText: "#5d7086",
+    strongerText: "#f5f7fb",
   },
   selection: {
-    foreground: "#06131f",
-    background: "#b7d7ff",
+    foreground: "#f7fbff",
+    background: "#1f4d7a",
   },
   fileStatus: {
-    added: "#84d892",
-    deleted: "#ff8a8a",
-    modified: "#ffd166",
-    renamed: "#7cc7ff",
+    added: "#8ddc9b",
+    deleted: "#ff9696",
+    modified: "#c7d4e3",
+    renamed: "#8fa1b5",
   },
   diffLine: {
-    context: "#d7dee8",
-    add: "#8ee39f",
-    remove: "#ff9999",
-    hunk: "#7cc7ff",
-    empty: "#d7dee8",
+    context: "#cad3df",
+    add: "#8ddc9b",
+    remove: "#ff9696",
+    hunk: "#6f8fb1",
+    empty: "#5d7086",
   },
+  lineNumber: "#627489",
 };

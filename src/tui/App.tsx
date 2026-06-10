@@ -123,7 +123,7 @@ export function App({ diff, onQuit }: { diff: ParsedDiff; onQuit: () => void }) 
         backgroundColor: tuiTheme.content.background,
       }}
     >
-      <Header diff={diff} selectedFile={selectedFile} sidebarVisible={sidebarVisible} width={width} />
+      <Header diff={diff} sidebarVisible={sidebarVisible} width={width} />
       <box style={{ width: "100%", height: bodyHeight, flexDirection: "row" }}>
         {sidebarVisible ? (
           <FileList
